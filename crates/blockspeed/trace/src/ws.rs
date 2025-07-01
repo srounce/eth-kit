@@ -150,17 +150,24 @@ impl WsConnection {
                 }
                 Ok(Err(e)) => {
                     // RPC error, retry after delay
+                    let error_str = e.to_string();
+                    if error_str.contains("Connection was closed")
+                        || error_str.contains("Internal Error")
+                        || error_str.contains("1013")
+                    {
+                        return Err(eyre::eyre!("WebSocket connection closed: {}", e));
+                    }
+
                     error!(
                         "RPC error getting block transaction count: {}, retrying in 150ms",
                         e
                     );
+
                     tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
                     continue;
                 }
                 Err(_) => {
-                    // timeout, retry after delay
-                    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
-                    continue;
+                    return Err(eyre::eyre!("request timeout - connection may be dead"));
                 }
             }
         };
