@@ -24,6 +24,20 @@ group "all" {
   ]
 }
 
+target "common" {
+  dockerfile = "Dockerfile"
+  cache-from = [
+    "type=registry,ref=${REGISTRY}-cache:base",
+    "type=registry,ref=${REGISTRY}-cache:planner",
+    "type=registry,ref=${REGISTRY}-cache:builder"
+  ]
+  cache-to = [
+    "type=registry,ref=${REGISTRY}-cache:base,mode=max",
+    "type=registry,ref=${REGISTRY}-cache:planner,mode=max",
+    "type=registry,ref=${REGISTRY}-cache:builder,mode=max"
+  ]
+}
+
 # DISPERSER TARGETS
 target "execution-probe" {
   context    = "."
