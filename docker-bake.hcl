@@ -20,6 +20,7 @@ group "all" {
   targets = [
     "execution-probe",
     "beacon-probe",
+    "blockspeed",
   ]
 }
 
@@ -36,4 +37,11 @@ target "beacon-probe" {
   dockerfile = "./Dockerfile"
   target     = "beacon-probe"
   tags       = ["${REGISTRY}/${REPO}/beacon-probe:${GIT_SHA}"]
+}
+
+target "blockspeed" {
+    context = "."
+    dockerfile = "./Dockerfile"
+    target = "blockspeed"
+    tags       = ["${REGISTRY}/${REPO}/blockspeed:${GIT_SHA}"]
 }

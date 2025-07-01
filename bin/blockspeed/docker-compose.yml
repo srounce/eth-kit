@@ -1,0 +1,88 @@
+services:
+  influxdb:
+    image: influxdb:2.7
+    ports: ["8086:8086"]
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminpass
+      - DOCKER_INFLUXDB_INIT_ORG=blockspeed-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=blockspeed
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=token
+
+  grafana:
+    image: grafana/grafana:11.6.3
+    ports: ["3000:3000"]
+    restart: unless-stopped
+    depends_on:
+      - influxdb
+    environment:
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin # comment out to view GF as Viewer
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_BASIC_ENABLED=false
+      - GF_USERS_DEFAULT_THEME=light
+
+      # uncomment to view GF as Viewer
+      # - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      # - GF_USERS_ALLOW_SIGN_UP=false
+      # - GF_USERS_ALLOW_ORG_CREATE=false
+      # - GF_USERS_AUTO_ASSIGN_ORG=true
+      # - GF_USERS_AUTO_ASSIGN_ORG_ROLE=Viewer
+      # - GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH=/etc/grafana/provisioning/dashboards/blockspeed.json
+      # - GF_SECURITY_ALLOW_EMBEDDING=true
+      # - GF_AUTH_DISABLE_LOGIN_FORM=true
+      # - GF_SECURITY_DISABLE_GRAVATAR=true
+      # - GF_ANALYTICS_REPORTING_ENABLED=false
+      # - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+      # - GF_ALERTING_ENABLED=false
+      # - GF_UNIFIED_ALERTING_ENABLED=false
+      # - GF_ALERTING_EXECUTE_ALERTS=false
+      # - GF_EXPLORE_ENABLED=false
+      # - GF_HELP_ENABLED=false
+    configs:
+      - source: datasources
+        target: /etc/grafana/provisioning/datasources/influxdb.yaml
+      - source: dashboards_provider
+        target: /etc/grafana/provisioning/dashboards/dashboards.yaml
+      - source: blockspeed_dashboard
+        target: /etc/grafana/provisioning/dashboards/blockspeed.json
+
+configs:
+  datasources:
+    content: |
+      apiVersion: 1
+      datasources:
+        - name: InfluxDB
+          type: influxdb
+          access: proxy
+          url: http://influxdb:8086
+          database: blockspeed
+          isDefault: true
+          jsonData:
+            version: Flux
+            organization: blockspeed-org
+            defaultBucket: blockspeed
+            tlsSkipVerify: true
+          secureJsonData:
+            token: token
+
+  dashboards_provider:
+    content: |
+      apiVersion: 1
+      providers:
+        - name: 'blockspeed'
+          orgId: 1
+          folder: ''
+          folderUid: ''
+          type: file
+          disableDeletion: true
+          editable: true
+          updateIntervalSeconds: 10
+          allowUiUpdates: true
+          options:
+            path: /etc/grafana/provisioning/dashboards
+
+  blockspeed_dashboard:
+    file: ./dashboards/blockspeed.json

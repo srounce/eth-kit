@@ -11,9 +11,13 @@ exclude = [".github/", ".direnv/"]
 members = [
     "bin/execution-probe",
     "bin/beacon-probe",
+    "bin/blockspeed",
     "crates/metrics",
     "crates/execution-probe/echo",
     "crates/execution-probe/cmd",
+    "crates/blockspeed/echo",
+    "crates/blockspeed/cmd",
+    "crates/blockspeed/trace",
 ]
 resolver = "2"
 
@@ -34,3 +38,6 @@ execution-probe-echo = { path = "crates/execution-probe/echo" }
 execution-probe-cmd = { path = "crates/execution-probe/cmd" }
 beacon-probe-echo = { path = "crates/beacon-probe/echo" }
 beacon-probe-cmd = { path = "crates/beacon-probe/cmd" }
+blockspeed-echo = { path = "crates/blockspeed/echo" }
+blockspeed-cmd = { path = "crates/blockspeed/cmd" }
+blockspeed-trace = { path = "crates/blockspeed/trace" }

@@ -14,8 +14,9 @@ cargo build --release
 
 All tools and more info can be found under the `bin` directory.
 
-- beacon-probe (monitor the health of beacon nodes -> lighthouse, prysm, ...)
-- execution-probe (monitor the health of execution nodes -> geth, reth, ...)
+- [beacon-probe](./bin/beacon-probe/README.md) (monitor the health of Ethereum consensus clients)
+- [execution-probe](./bin/execution-probe/README.md) (monitor the health of Ethereum execution clients)
+- [blockspeed](./bin/blockspeed/README.md) (real-time Ethereum blockchain performance monitoring)
 
 ## License
 
