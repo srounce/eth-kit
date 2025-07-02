@@ -127,6 +127,7 @@ impl WsConnection {
 
         let header: Value = header_value;
         let block_hash = header["hash"].as_str().unwrap_or_default();
+        let mut retries = 0;
 
         let block_tx_count = loop {
             match tokio::time::timeout(
@@ -139,6 +140,10 @@ impl WsConnection {
             .await
             {
                 Ok(Ok(Some(hex_str))) => {
+                    if retries > 0 {
+                        info!("got tx count for hash {}", block_hash)
+                    }
+
                     break u64::from_str_radix(hex_str.trim_start_matches("0x"), 16).map_err(
                         |e| eyre::eyre!("failed to parse transaction count '{}': {}", hex_str, e),
                     )? as usize;
@@ -157,17 +162,20 @@ impl WsConnection {
                     {
                         return Err(eyre::eyre!("WebSocket connection closed: {}", e));
                     }
-
+                    retries = retries + 1;
                     error!(
-                        "RPC error getting block transaction count: {}, retrying in 150ms",
-                        e
+                        "RPC error getting block transaction count: {} for {}, retrying in 150ms",
+                        e, block_hash
                     );
 
                     tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
                     continue;
                 }
                 Err(_) => {
-                    return Err(eyre::eyre!("request timeout - connection may be dead"));
+                    return Err(eyre::eyre!(
+                        "request timeout - connection may be dead for hash {}",
+                        block_hash
+                    ));
                 }
             }
         };
