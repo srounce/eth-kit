@@ -129,54 +129,60 @@ impl WsConnection {
         let block_hash = header["hash"].as_str().unwrap_or_default();
         let mut retries = 0;
 
-        let block_tx_count = loop {
-            match tokio::time::timeout(
-                tokio::time::Duration::from_secs(1),
-                client.request::<Option<String>, _>(
-                    "eth_getBlockTransactionCountByHash",
-                    jsonrpsee::core::rpc_params![block_hash],
-                ),
-            )
-            .await
-            {
-                Ok(Ok(Some(hex_str))) => {
-                    if retries > 0 {
-                        info!("got tx count for hash {}", block_hash)
-                    }
-
-                    break u64::from_str_radix(hex_str.trim_start_matches("0x"), 16).map_err(
-                        |e| eyre::eyre!("failed to parse transaction count '{}': {}", hex_str, e),
-                    )? as usize;
-                }
-                Ok(Ok(None)) => {
-                    // block not available yet, retry after delay
-                    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
-                    continue;
-                }
-                Ok(Err(e)) => {
-                    // RPC error, retry after delay
-                    let error_str = e.to_string();
-                    if error_str.contains("Connection was closed")
-                        || error_str.contains("Internal Error")
-                        || error_str.contains("1013")
+        let block_tx_count = match tokio::time::timeout(
+            tokio::time::Duration::from_secs(3),
+            async {
+                loop {
+                    match client.request::<Option<String>, _>(
+                        "eth_getBlockTransactionCountByHash",
+                        jsonrpsee::core::rpc_params![block_hash],
+                    )
+                    .await
                     {
-                        return Err(eyre::eyre!("WebSocket connection closed: {}", e));
-                    }
-                    retries = retries + 1;
-                    error!(
-                        "RPC error getting block transaction count: {} for {}, retrying in 150ms",
-                        e, block_hash
-                    );
+                        Ok(Some(hex_str)) => {
+                            if retries > 0 {
+                                info!("got tx count for hash {}, retries {}", block_hash, retries)
+                            }
 
-                    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
-                    continue;
+                            return Ok(u64::from_str_radix(hex_str.trim_start_matches("0x"), 16)
+                                .map_err(|e| {
+                                    eyre::eyre!(
+                                        "failed to parse transaction count '{}': {}",
+                                        hex_str,
+                                        e
+                                    )
+                                })? as usize);
+                        }
+                        Ok(None) => {
+                            // block not available yet, retry after delay
+                            tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+                            continue;
+                        }
+                        Err(e) => {
+                            // RPC error, retry after delay
+                            let error_str = e.to_string();
+                            if error_str.contains("Connection was closed")
+                                || error_str.contains("Internal Error")
+                                || error_str.contains("1013")
+                            {
+                                return Err(eyre::eyre!("WebSocket connection closed: {}", e));
+                            }
+                            retries = retries + 1;
+                            error!(
+                            "RPC error getting block transaction count: {} for {}, retrying in 150ms",
+                            e, block_hash
+                        );
+
+                            tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+                            continue;
+                        }
+                    }
                 }
-                Err(_) => {
-                    return Err(eyre::eyre!(
-                        "request timeout - connection may be dead for hash {}",
-                        block_hash
-                    ));
-                }
+            }
+        ).await {
+            Ok(res) => res?,
+            Err(_) => {
+                return Err(eyre::eyre!("timeout 1s getting block transaction count for hash {}", block_hash));
             }
         };
 
