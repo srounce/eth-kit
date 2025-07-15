@@ -12,30 +12,16 @@ exclude.workspace = true
 workspace = true
 
 [dependencies]
-# tasks
-tokio = { version = "1", features = ["full"] }
+tracing.workspace = true
+tokio.workspace = true
+metrics.workspace = true
+hyper = { workspace = true, features = ["full"] }
+hyper-util = { workspace = true, features = ["full"] }
+http.workspace = true
+http-body-util.workspace = true
+bytes.workspace = true
+eyre.workspace = true
 
-# http
-hyper = { version = "1", features = ["full"] }
-hyper-util = { version = "0.1", features = ["full"] }
-http = "1"
-http-body-util = "0.1"
-bytes = "1"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-
-# rpc client
-jsonrpsee = { version = "0.25", features = ["client-core", "http-client"] }
-jsonrpsee-types = "0.25"
-
-# error handling
-eyre = "0.6"
-
-# tracing
-tracing = "0.1"
-
-# metrics
-metrics = "0.24"
 eth-kit-metrics.workspace = true
 
 [features]

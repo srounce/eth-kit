@@ -12,25 +12,15 @@ exclude.workspace = true
 workspace = true
 
 [dependencies]
-# tasks
-tokio = { version = "1", features = ["full"] }
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true
+eyre.workspace = true
 
-# tracing
-tracing = "0.1"
-tracing-subscriber = "0.3"
-
-# cli
-execution-probe-cmd.workspace = true
-clap = { version = "4", features = ["derive", "env"] }
-
-# error handling
-eyre = "0.6"
-
-# echo server
-execution-probe-echo.workspace = true
-
-# metrics
 eth-kit-metrics.workspace = true
+execution-probe-cmd.workspace = true
+execution-probe-echo.workspace = true
 
 [features]
 default = []
