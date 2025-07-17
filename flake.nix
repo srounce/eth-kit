@@ -35,6 +35,8 @@
             pkgs.gitAndTools.git-absorb
             pkgs.treefmt
             pkgs.foundry-bin
+            pkgs.cargo-audit
+            pkgs.cargo-geiger
           ];
         };
       });

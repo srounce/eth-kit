@@ -71,3 +71,7 @@ influxdb2-structmap = "0.2"
 influxdb2-derive = "0.1.1"
 num-traits = "0.2"
 futures-util = "0.3"
+
+[workspace.dev-dependencies]
+proptest = "1.4"
+criterion = "0.6"
