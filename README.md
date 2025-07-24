@@ -9,13 +9,31 @@ We will be adding through time more tools and utilities to this repository. If y
 ```
 cargo build --release
 ```
-
-## Tools
+## ETH Tools
 
 All tools and more info can be found under the `bin` directory.
 
-- beacon-probe (monitor the health of beacon nodes -> lighthouse, prysm, ...)
-- execution-probe (monitor the health of execution nodes -> geth, reth, ...)
+- [beacon-probe](./bin/beacon-probe/README.md) (monitor the health of Ethereum consensus clients)
+- [execution-probe](./bin/execution-probe/README.md) (monitor the health of Ethereum execution clients)
+- [blockspeed](./bin/blockspeed/README.md) (real-time Ethereum blockchain performance monitoring)
+
+## Development Tools
+
+| Tool           | Purpose                                 |
+|----------------|-----------------------------------------|
+| `rustfmt`      | Auto-format code                        |
+| `clippy`       | Lint for common mistakes                |
+| `cargo-audit`  | Scan for vulnerable dependencies        |
+| `cargo-geiger` | Detect `unsafe` code in deps            |
+| `proptest`     | Property-based testing                  |
+| `criterion`    | Benchmarking with statistical analysis  |
+
+```
+cargo fmt -- --check
+cargo clippy -- -D warnings
+cargo audit
+cargo geiger
+```
 
 ## License
 

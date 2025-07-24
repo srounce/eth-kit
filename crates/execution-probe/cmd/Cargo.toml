@@ -12,16 +12,10 @@ exclude.workspace = true
 workspace = true
 
 [dependencies]
-# tracing
-tracing = "0.1"
-
-# cli
-clap = { version = "4", features = ["derive", "env"] }
-
-# error handling
-eyre = "0.6"
-
-url = "2.5"
+tracing.workspace = true
+clap = { workspace = true, features = ["derive", "env"] }
+eyre.workspace = true
+url.workspace = true
 
 [features]
 default = []

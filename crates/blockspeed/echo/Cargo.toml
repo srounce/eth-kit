@@ -1,5 +1,5 @@
 [package]
-name = "execution-probe-echo"
+name = "blockspeed-echo"
 version = "0.0.1"
 edition.workspace = true
 rust-version.workspace = true
@@ -20,12 +20,6 @@ hyper-util = { workspace = true, features = ["full"] }
 http.workspace = true
 http-body-util.workspace = true
 bytes.workspace = true
-serde.workspace = true
-serde_json.workspace = true
-jsonrpsee = { workspace = true, features = ["client-core", "http-client"] }
-jsonrpsee-types.workspace = true
-alloy-rpc-types-eth.workspace = true
-alloy-primitives.workspace = true
 eyre.workspace = true
 
 eth-kit-metrics.workspace = true

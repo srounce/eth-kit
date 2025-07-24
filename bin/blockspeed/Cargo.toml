@@ -1,5 +1,5 @@
 [package]
-name = "beacon-probe"
+name = "blockspeed"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -19,12 +19,13 @@ clap.workspace = true
 eyre.workspace = true
 
 eth-kit-metrics.workspace = true
-beacon-probe-cmd.workspace = true
-beacon-probe-echo.workspace = true
+blockspeed-cmd.workspace = true
+blockspeed-echo.workspace = true
+blockspeed-trace.workspace = true
 
 [features]
 default = []
 
 [[bin]]
-name = "beacon-probe"
+name = "blockspeed"
 path = "src/main.rs"

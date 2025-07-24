@@ -4,9 +4,10 @@
     systems.url = "github:nix-systems/default";
     rust-overlay.url = "github:oxalica/rust-overlay";
     rust-overlay.inputs.nixpkgs.follows = "nixpkgs";
+    foundry.url = "github:shazow/foundry.nix/monthly"; # Use monthly branch for permanent releases
   };
 
-  outputs = { self, nixpkgs, systems, rust-overlay, ... }@inputs:
+  outputs = { self, nixpkgs, systems, rust-overlay, foundry, ... }@inputs:
     let
       eachSystem = f:
         nixpkgs.lib.genAttrs (import systems) (system:
@@ -15,6 +16,7 @@
             config = { allowUnfree = true; };
             overlays = [
               rust-overlay.overlays.default
+              foundry.overlay
             ];
           }));
     in {
@@ -32,6 +34,9 @@
             pkgs.rust-analyzer # language server
             pkgs.gitAndTools.git-absorb
             pkgs.treefmt
+            pkgs.foundry-bin
+            pkgs.cargo-audit
+            pkgs.cargo-geiger
           ];
         };
       });

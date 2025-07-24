@@ -1,5 +1,5 @@
 [package]
-name = "execution-probe-echo"
+name = "blockspeed-trace"
 version = "0.0.1"
 edition.workspace = true
 rust-version.workspace = true
@@ -22,11 +22,16 @@ http-body-util.workspace = true
 bytes.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-jsonrpsee = { workspace = true, features = ["client-core", "http-client"] }
+jsonrpsee = { workspace = true, features = ["client-core", "http-client", "ws-client"] }
 jsonrpsee-types.workspace = true
 alloy-rpc-types-eth.workspace = true
 alloy-primitives.workspace = true
 eyre.workspace = true
+futures-util.workspace = true
+influxdb2.workspace = true
+influxdb2-structmap.workspace = true
+influxdb2-derive.workspace = true
+num-traits.workspace = true
 
 eth-kit-metrics.workspace = true
 
