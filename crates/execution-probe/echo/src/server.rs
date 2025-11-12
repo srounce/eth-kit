@@ -82,7 +82,7 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
             }
             1 => {
                 let peer_count: U64 = serde_json::from_value(response)?;
-                if peer_count < U64::from(min_peers + 1) {
+                if peer_count < U64::from(min_peers) {
                     return Err(eyre::eyre!(
                         "not enough peers min: {:?}, current: {:?}",
                         min_peers,
