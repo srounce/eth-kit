@@ -63,3 +63,4 @@ jobs:
           provenance: true
         env:
           REPO: ${{ env.IMAGE_NAME }}
+          GIT_SHA: ${{ env.GIT_SHORT_SHA }}
