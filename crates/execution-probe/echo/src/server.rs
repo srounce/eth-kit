@@ -99,8 +99,16 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
                     .duration_since(UNIX_EPOCH)
                     .expect("time went backwards")
                     .as_secs();
-                let time_diff = now - block_info.header.timestamp;
+
+                let time_diff = now.abs_diff(block_info.header.timestamp);
+
                 if time_diff > 60 {
+                    if block_info.header.timestamp > now {
+                        return Err(eyre::eyre!(
+                            "latest block has a timestamp in the future: {:?}",
+                            time_diff
+                        ));
+                    }
                     return Err(eyre::eyre!(
                         "latest block has not been updated for {:?}",
                         time_diff
