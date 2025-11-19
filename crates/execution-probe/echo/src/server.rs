@@ -17,7 +17,7 @@ use std::net::SocketAddr;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tokio::net::TcpListener;
 use tokio::signal::unix::{signal, SignalKind};
-use tracing::{error, info};
+use tracing::{error, info, info_span, warn};
 
 async fn echo(
     req: Request<hyper::body::Incoming>,
@@ -34,6 +34,7 @@ async fn echo(
             Err(e) => {
                 gauge!("execution_node_status").set(0.0);
                 let mut response = Response::new(full(e.to_string()));
+                error!(error = e.to_string(), "Probe recieved error response");
                 *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                 Ok(response)
             }
@@ -49,7 +50,7 @@ async fn echo(
 }
 
 async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
-    let client = HttpClientBuilder::default().build(uri).unwrap();
+    let client = HttpClientBuilder::default().build(&uri).unwrap();
 
     let mut batch = BatchRequestBuilder::new();
     batch.insert("eth_syncing", rpc_params![]).unwrap();
@@ -57,6 +58,9 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
     batch
         .insert("eth_getBlockByNumber", rpc_params!["latest", false])
         .unwrap();
+
+    let check_span = info_span!("Checking node", uri = uri.to_string());
+    let _check_span_entry = check_span.enter();
 
     let responses = client
         .batch_request(batch)
@@ -72,22 +76,26 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
                 match syncing_status {
                     SyncStatus::None => (),
                     SyncStatus::Info(ref info) => {
-                        return Err(eyre::eyre!(
+                        let err = eyre::eyre!(
                             "node is syncing, current block {:?}, latest block {:?}",
                             info.current_block,
                             info.highest_block
-                        ))
+                        );
+                        warn!(condition = err.to_string(), "Node still syncing");
+                        return Err(err)
                     }
                 }
             }
             1 => {
                 let peer_count: U64 = serde_json::from_value(response)?;
                 if peer_count < U64::from(min_peers) {
-                    return Err(eyre::eyre!(
+                    let err = eyre::eyre!(
                         "not enough peers min: {:?}, current: {:?}",
                         min_peers,
                         peer_count
-                    ));
+                    );
+                    warn!(condition = err.to_string(), "Peer count too low");
+                    return Err(err);
                 }
             }
             2 => {
@@ -104,15 +112,19 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
 
                 if time_diff > 60 {
                     if block_info.header.timestamp > now {
-                        return Err(eyre::eyre!(
+                        let err = eyre::eyre!(
                             "latest block has a timestamp in the future: {:?}",
                             time_diff
-                        ));
+                        );
+                        warn!(condition = err.to_string(), "Node head is in the future");
+                        return Err(err);
                     }
-                    return Err(eyre::eyre!(
+                    let err = eyre::eyre!(
                         "latest block has not been updated for {:?}",
                         time_diff
-                    ));
+                    );
+                    warn!(condition = err.to_string(), "Node head has not moved");
+                    return Err(err);
                 }
             }
             _ => error!("unexpected response at index {}", index),
