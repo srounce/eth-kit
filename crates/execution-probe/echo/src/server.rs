@@ -34,7 +34,7 @@ async fn echo(
             Err(e) => {
                 gauge!("execution_node_status").set(0.0);
                 let mut response = Response::new(full(e.to_string()));
-                error!(error = e.to_string(), "Probe recieved error response");
+                warn!(error = e.to_string(), "Probe recieved error response");
                 *response.status_mut() = StatusCode::INTERNAL_SERVER_ERROR;
                 Ok(response)
             }
@@ -120,7 +120,7 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
                         return Err(err);
                     }
                     let err = eyre::eyre!(
-                        "latest block has not been updated for {:?}",
+                        "latest block has not been updated for {:?} seconds",
                         time_diff
                     );
                     warn!(condition = err.to_string(), "Node head has not moved");
@@ -130,6 +130,8 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
             _ => error!("unexpected response at index {}", index),
         }
     }
+
+    info!(uri = uri.to_string(), "Execution node is healthy");
 
     Ok(())
 }
