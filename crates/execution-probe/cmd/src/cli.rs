@@ -40,6 +40,14 @@ pub struct Cli {
 
     #[arg(long, value_name = "MIN_PEERS", env = "MIN_PEERS", default_value = "2")]
     min_peers: u16,
+
+    #[arg(
+        long,
+        value_name = "MAX_BLOCK_DELAY_SECS",
+        env = "MAX_BLOCK_DELAY_SECS",
+        default_value = "60"
+    )]
+    max_block_delay_seconds: u64,
 }
 
 impl Cli {
@@ -72,6 +80,10 @@ impl Cli {
             }
             Err(e) => Err(eyre::eyre!("failed to parse node uri: {}", e)),
         }
+    }
+
+    pub fn resolve_max_block_delay_seconds(&self) -> eyre::Result<u64> {
+        Ok(self.max_block_delay_seconds)
     }
 
     pub fn resolve_min_peers(&self) -> eyre::Result<u16> {
