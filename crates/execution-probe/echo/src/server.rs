@@ -22,11 +22,13 @@ use tracing::{error, info, info_span, warn};
 async fn echo(
     req: Request<hyper::body::Incoming>,
     node_uri: String,
+    max_block_delay_seconds: u64,
     min_peers: u16,
 ) -> eyre::Result<Response<BoxBody<Bytes, hyper::Error>>> {
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
-        (&Method::GET, "/") => match is_healthy(node_uri, min_peers).await {
+        (&Method::GET, "/") => match is_healthy(node_uri, max_block_delay_seconds, min_peers).await
+        {
             Ok(_) => {
                 gauge!("execution_node_status").set(1.0);
                 Ok(Response::new(full("ok")))
@@ -49,7 +51,7 @@ async fn echo(
     }
 }
 
-async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
+async fn is_healthy(uri: String, max_block_delay_seconds: u64, min_peers: u16) -> eyre::Result<()> {
     let client = HttpClientBuilder::default().build(&uri).unwrap();
 
     let mut batch = BatchRequestBuilder::new();
@@ -82,7 +84,7 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
                             info.highest_block
                         );
                         warn!(condition = err.to_string(), "Node still syncing");
-                        return Err(err)
+                        return Err(err);
                     }
                 }
             }
@@ -110,7 +112,7 @@ async fn is_healthy(uri: String, min_peers: u16) -> eyre::Result<()> {
 
                 let time_diff = now.abs_diff(block_info.header.timestamp);
 
-                if time_diff > 60 {
+                if time_diff > max_block_delay_seconds {
                     if block_info.header.timestamp > now {
                         let err = eyre::eyre!(
                             "latest block has a timestamp in the future: {:?}",
@@ -148,7 +150,12 @@ fn full<T: Into<Bytes>>(chunk: T) -> BoxBody<Bytes, hyper::Error> {
         .boxed()
 }
 
-pub async fn serve_echo(addr: SocketAddr, node_uri: String, min_peers: u16) -> eyre::Result<()> {
+pub async fn serve_echo(
+    addr: SocketAddr,
+    node_uri: String,
+    max_block_delay_seconds: u64,
+    min_peers: u16,
+) -> eyre::Result<()> {
     describe_gauge!("execution_node_status", "execution node status");
 
     let listener = TcpListener::bind(addr).await.unwrap();
@@ -166,7 +173,7 @@ pub async fn serve_echo(addr: SocketAddr, node_uri: String, min_peers: u16) -> e
                 let io = TokioIo::new(tcp);
 
                 let node_uri_clone = node_uri.clone();
-                let service = service_fn(move |req| echo(req, node_uri_clone.to_string(), min_peers));
+                let service = service_fn(move |req| echo(req, node_uri_clone.to_string(), max_block_delay_seconds, min_peers));
 
                 let connection_timeouts_clone = connection_timeouts.clone();
 

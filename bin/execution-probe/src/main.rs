@@ -4,7 +4,6 @@ use clap::Parser;
 use std::net::SocketAddr;
 
 use tracing::{error, info};
-use tracing_subscriber;
 
 use eth_kit_metrics::{recorder::install_prometheus_recorder, server::MetricsServer};
 use execution_probe_cmd::cli::Cli;
@@ -19,10 +18,16 @@ pub async fn main() {
     let addr = cli.resolve_addr().unwrap();
     let metrics_addr = cli.resolve_metrics_addr().unwrap();
     let node_uri = cli.resolve_node_uri().unwrap();
+    let max_block_delay_seconds = cli.resolve_max_block_delay_seconds().unwrap();
     let min_peers = cli.resolve_min_peers().unwrap();
 
     if let Err(e) = tokio::try_join!(
-        serve_app(addr, node_uri.to_string(), min_peers),
+        serve_app(
+            addr,
+            node_uri.to_string(),
+            max_block_delay_seconds,
+            min_peers
+        ),
         serve_metrics(metrics_addr)
     ) {
         error!("error: {:?}", e);
@@ -31,8 +36,13 @@ pub async fn main() {
     }
 }
 
-pub async fn serve_app(addr: SocketAddr, node_uri: String, min_peers: u16) -> eyre::Result<()> {
-    serve_echo(addr, node_uri, min_peers).await?;
+pub async fn serve_app(
+    addr: SocketAddr,
+    node_uri: String,
+    max_block_delay_seconds: u64,
+    min_peers: u16,
+) -> eyre::Result<()> {
+    serve_echo(addr, node_uri, max_block_delay_seconds, min_peers).await?;
     Ok(())
 }
 
